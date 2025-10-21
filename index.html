@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de cabos</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        p {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .buttons button {
+            width: 30%;
+            padding: 8px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results p {
+            margin: 5px 0;
+        }
+    </style>
+	<link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+<link rel="manifest" href="/img/site.webmanifest">
+</head>
+<body>
+    <div class="container">
+        <h1>Conversor de cabos</h1>
+        <label for="unitFrom">Tipo de Cabo:</label>
+        <select id="unitFrom">
+            <option value="4CA">4 CA</option><!--ROSE-->
+			<option value="2CA">2 CA</option><!--IRIS-->
+			<option value="10CA">1/0 CA</option><!--POPPY-->
+			<!--<option value="20CA">2/0 CA</option>--ASTER-->
+			<!--<option value="30CA">3/0 CA</option>PHLOX-->
+			<option value="40CA">4/0 CA</option><!--OXLIP-->
+			<option value="336CA">336 CA</option>
+			<option value="4CAA">4 CAA</option>
+			<!--<option value="2CAA">2 CAA</option>-->
+            <option value="10CAA">1/0 CAA</option>
+            <option value="40CAA">4/0 CAA</option>
+            
+            
+			<option value="cord95">Cord. 9,5</option>
+			<option value="cord64">Cord. 6,4</option>
+        </select>
+
+        <label for="unitTo">Para:</label>
+        <select id="unitTo">
+            <option value="m">Metros</option>
+            <option value="kg" selected>Quilos</option>
+        </select>
+
+        <label for="circuitType">Quantidade de ativos:</label>
+        <select id="circuitType">
+            <option value="mono">1</option>
+            <option value="mononeutro">2</option>
+            <option value="tri">3</option>
+			<option value="tribt">4</option>
+			<option value="trinp">5</option>
+        </select>
+
+        <label for="metros">Metros:</label>
+        <input type="number" id="metros" placeholder="Digite o valor em metros" step="any">
+        <label for="quilos">Quilos:</label>
+        <input type="number" id="quilos" placeholder="Digite o valor em quilos" step="any">
+        <button onclick="converter()">Converter</button>
+        <div class="results">
+            <p id="resultado"></p>
+            <p id="resultado10"></p>
+            <p id="resultadoMaoDeObra"></p>
+        </div>
+        <div class="buttons">
+            <button onclick="adicionar10()">Adicionar 10%</button>
+            <button onclick="calcularMaoDeObra()">Calcular Mão de Obra</button>
+            <button onclick="limparCampos()">Limpar</button>
+        </div>
+    </div>
+
+    <script>
+        const ca4 = 0.0583;
+		const ca2 = 0.0927;
+		const ca10 = 0.1475;
+		const ca20 = 0.1859;<!--Ndu 006 agosto 2018 pg 113 tabela 20-->
+		const ca30 = 0.2144;<!--Ndu 006 agosto 2018 pg 113 tabela 20-->
+		const ca40 = 0.2956;
+		const ca336 = 0.47;
+		const ca477 = 0.6664;
+		const caa4 = 0.0854;
+		const caa2 = 0.1359;
+        const caa10 = 0.2163;
+        const caa40 = 0.4332;
+		const caa266 = 0.5468;
+		const caa336 = 0.6887;<!--ajustado conforme  NDU-007 março 2010 tabela 20 peso dos cabos pg 69-->
+        const cord95 = 0.38;
+		const cord64 = 0.181;
+        let quilos = 0;
+        let metros = 0;
+
+        function converter() {
+            let tipoCabo = document.getElementById('unitFrom').value;
+            let tipoCircuito = document.getElementById('circuitType').value;
+            let unitTo = document.getElementById('unitTo').value;
+
+            if (unitTo === 'kg') {
+                // Obtém o valor em metros do input e converte para número
+                metros = parseFloat(document.getElementById('metros').value);
+
+                // Verifica se o valor é um número válido
+                if (isNaN(metros)) {
+                    document.getElementById('resultado').innerText = "Por favor, insira um número válido.";
+                    return;
+                }
+
+                // Converte metros para quilos com base no tipo de cabo
+                switch (tipoCabo) {
+                    case '2CAA':
+                        quilos = metros * caa2;
+                        break;
+                    case '4CAA':
+                        quilos = metros * caa4;
+                        break;
+                    case '10CAA':
+                        quilos = metros * caa10;
+                        break;
+                    case '40CAA':
+                        quilos = metros * caa40;
+                        break;
+                    case '2CA':
+                        quilos = metros * ca2;
+                        break;
+                    case '4CA':
+                        quilos = metros * ca4;
+                        break;
+                    case '10CA':
+                        quilos = metros * ca10;
+                        break;
+                    case '40CA':
+                        quilos = metros * ca40;
+                        break;
+					case 'cord95':
+                        quilos = metros * cord95;
+                        break;
+					case 'cord64':
+                        quilos = metros * cord64;
+                        break;
+					case '20CA': 
+						quilos = metros * ca20;
+						break;
+					case '30CA': 
+						quilos = metros * ca30;
+						break;
+					case '336CA': 
+						quilos = metros * ca336;
+						break;
+                    default:
+                        quilos = 0;
+                }
+
+                // Ajustar para o tipo de circuito
+                switch (tipoCircuito) {
+                    case 'mono':
+                        quilos = quilos;
+                        break;
+                    case 'mononeutro':
+                        quilos = quilos * 2;
+                        break;
+                    case 'tri':
+                        quilos = quilos * 3;
+                        break;
+                    default:
+                        quilos = 0;
+                }
+
+                // Exibe o resultado com no máximo 3 casas decimais
+                document.getElementById('resultado').innerText = `${metros} metros é igual a ${quilos.toFixed(3)} quilos.`;
+            } else {
+                // Obtém o valor em quilos do input e converte para número
+                quilos = parseFloat(document.getElementById('quilos').value);
+
+                // Verifica se o valor é um número válido
+                if (isNaN(quilos)) {
+                    document.getElementById('resultado').innerText = "Por favor, insira um número válido.";
+                    return;
+                }
+
+                // Converte quilos para metros com base no tipo de cabo
+                switch (tipoCabo) {
+                    case '2CAA':
+                        metros = quilos / caa2;
+                        break;
+                    case '4CAA':
+                        metros = quilos / caa4;
+                        break;
+                    case '10CAA':
+                        metros = quilos / caa10;
+                        break;
+                    case '40CAA':
+                        metros = quilos / caa40;
+                        break;
+                    case '2CA':
+                        metros = quilos / ca2;
+                        break;
+                    case '4CA':
+                        metros = quilos / ca4;
+                        break;
+                    case '10CA':
+                        metros = quilos / ca10;
+                        break;
+                    case '40CA':
+                        metros = quilos / ca40;
+                        break;
+					case 'cord95':
+                        metros = quilos / cord95;
+                        break;
+					case 'cord64':
+                        metros = quilos / cord64;
+                        break;
+					case '336CA':
+                        metros = quilos / ca336;
+					    break;
+                    default:
+                        metros = 0;
+                }
+
+                // Ajustar para o tipo de circuito
+                switch (tipoCircuito) {
+                    case 'mono':
+                        metros = metros;
+                        break;
+                    case 'mononeutro':
+                        metros = metros * 2;
+                        break;
+                    case 'tri':
+                        metros = metros * 3;
+                        break;
+                    default:
+                        metros = 0;
+                }
+
+                // Exibe o resultado com no máximo 3 casas decimais
+                document.getElementById('resultado').innerText = `${quilos} quilos é igual a ${metros.toFixed(3)} metros.`;
+            }
+
+            // Limpa os campos adicionais de resultado
+            document.getElementById('resultado10').innerText = '';
+            document.getElementById('resultadoMaoDeObra').innerText = '';
+        }
+
+        function adicionar10() {
+            let resultado = quilos * 1.1;
+            document.getElementById('resultado10').innerText = `Resultado com 10% adicional: ${resultado.toFixed(3)} quilos.`;
+        }
+
+               function calcularMaoDeObra() {
+            let maoDeObra = quilos / 100;
+            document.getElementById('resultadoMaoDeObra').innerText = `Valor da mão de obra: ${maoDeObra.toFixed(3)} quilos.`;
+        }
+
+        function limparCampos() {
+            document.getElementById('metros').value = '';
+            document.getElementById('quilos').value = '';
+            document.getElementById('resultado').innerText = '';
+            document.getElementById('resultado10').innerText = '';
+            document.getElementById('resultadoMaoDeObra').innerText = '';
+            quilos = 0;
+            metros = 0;
+        }
+    </script>
+</body>
+</html>
