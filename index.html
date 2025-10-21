@@ -72,10 +72,9 @@
             margin: 5px 0;
         }
     </style>
-	<link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
-<link rel="manifest" href="/img/site.webmanifest">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="manifest.webmanifest">
+
 </head>
 <body>
     <div class="container">
@@ -320,6 +319,12 @@
             quilos = 0;
             metros = 0;
         }
+		if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker registrado!'));
+}
+
     </script>
 </body>
+
 </html>
